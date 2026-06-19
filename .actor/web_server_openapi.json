@@ -38,7 +38,7 @@
                                 "required": ["jsonrpc", "method"],
                                 "properties": {
                                     "jsonrpc": { "type": "string", "enum": ["2.0"] },
-                                    "id": { "type": ["string", "number", "null"] },
+                                    "id": { "description": "Request id (string or number); omitted for notifications.", "nullable": true },
                                     "method": {
                                         "type": "string",
                                         "description": "MCP method, e.g. initialize, tools/list, tools/call, prompts/get, resources/read."
