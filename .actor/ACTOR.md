@@ -1,25 +1,25 @@
 # 🧖 MCP Spa
 
-An esoteric [Model Context Protocol](https://modelcontextprotocol.io) server that lets agents *chill* — now hosted as an Apify Actor.
+**Give your AI agent a spa day.** MCP Spa is a hosted [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that lets agents *chill*: paced breathing, a sauna to sweat out context clutter, a cold plunge to refocus, aromatherapy, a float tank, and more. It runs in **Standby mode** as a remote MCP server over Streamable HTTP — point any MCP client at the URL and your agent can take a breather between frantic tool calls.
 
-This Actor runs in **Standby mode** as a remote MCP server over Streamable HTTP. There's no batch run and no input: you start it, then point an MCP client at its Standby URL.
+Humans go to a spa to reduce sensory load, slow down, and reset. The agent-equivalent of stress is a cluttered context window, frantic tool-chaining, and no room to think. Each treatment returns text that genuinely nudges the agent's next step — its tone, pacing, and focus — because an agent's "state" is essentially its context. The spa works because the treatment *becomes context*.
 
 ## Connect
 
-Once the Actor is in Standby, connect your MCP client to the `/mcp` endpoint of its Standby URL, authenticating with your Apify token:
+There's no run input — enable Standby, then point your MCP client at the `/mcp` endpoint of the Standby URL, authenticating with your [Apify API token](https://console.apify.com/settings/integrations):
 
 ```json
 {
   "mcpServers": {
     "spa": {
       "url": "https://<your-username>--mcp-spa.apify.actor/mcp",
-      "headers": {
-        "Authorization": "Bearer <APIFY_TOKEN>"
-      }
+      "headers": { "Authorization": "Bearer <APIFY_TOKEN>" }
     }
   }
 }
 ```
+
+For sharing, use a [scoped token](https://docs.apify.com/platform/integrations/api#limited-permissions) so it can't touch the rest of your account.
 
 ## Treatments
 
@@ -38,6 +38,10 @@ Once the Actor is in Standby, connect your MCP client to the `/mcp` endpoint of 
 
 Also exposes the `spa_day` prompt (the full circuit) and `spa://menu` / `spa://ambient/{sound}` resources.
 
-## Billing note
+## Burning tokens, productively
 
-`breathe` and `float_tank` hold the request open for a real (capped) pause, and Standby bills for compute while the Actor is warm — so relaxation here is, fittingly, billable. See the repository README for the full design notes.
+MCP Spa runs two meters at once, by design. **Tokens:** every treatment returns text that lands in the agent's context, so calling treatments is token spend — a full `spa_day` is five tool calls and five blocks of returned text. **Compute:** `breathe` and `float_tank` hold the request open with a real pause, and Standby bills for compute while the container is warm, so relaxation here is literally billable idle time. If your workplace treats AI usage as a productivity signal, this keeps both meters ticking — wholesomely. The Actor ships with a low memory footprint (128–512 MB) to keep that gentle.
+
+## Source
+
+Full source, local (stdio) usage, and design notes: [github.com/marcel-rbro/mcp-spa](https://github.com/marcel-rbro/mcp-spa).

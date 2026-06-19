@@ -1,0 +1,70 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "MCP Spa",
+        "description": "A hosted Model Context Protocol (MCP) server that lets agents chill. Runs in Standby mode and serves MCP over Streamable HTTP at POST /mcp.",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "health",
+                "summary": "Liveness check",
+                "description": "Returns a short plain-text banner confirming the spa is open. Useful as a health probe.",
+                "responses": {
+                    "200": {
+                        "description": "The spa is open.",
+                        "content": {
+                            "text/plain": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mcp": {
+            "post": {
+                "operationId": "mcp",
+                "summary": "MCP endpoint (Streamable HTTP)",
+                "description": "Handles Model Context Protocol JSON-RPC requests (initialize, tools/list, tools/call, prompts, resources). Stateless: each request is independent. Authenticate with an Apify API token via the Authorization header.",
+                "requestBody": {
+                    "required": true,
+                    "description": "A JSON-RPC 2.0 message as defined by the MCP specification.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["jsonrpc", "method"],
+                                "properties": {
+                                    "jsonrpc": { "type": "string", "enum": ["2.0"] },
+                                    "id": { "type": ["string", "number", "null"] },
+                                    "method": {
+                                        "type": "string",
+                                        "description": "MCP method, e.g. initialize, tools/list, tools/call, prompts/get, resources/read."
+                                    },
+                                    "params": { "type": "object" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A JSON-RPC response, delivered as an SSE stream (text/event-stream) or JSON.",
+                        "content": {
+                            "text/event-stream": { "schema": { "type": "string" } },
+                            "application/json": { "schema": { "type": "object" } }
+                        }
+                    },
+                    "405": {
+                        "description": "Returned for GET/DELETE on /mcp — the server is stateless and only accepts POST.",
+                        "content": {
+                            "application/json": { "schema": { "type": "object" } }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

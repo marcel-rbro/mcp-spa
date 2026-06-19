@@ -57,9 +57,16 @@ Also exposed:
 - **Prompt** `spa_day` — the full circuit: check in → breathe → sauna → meditation → check out.
 - **Resources** `spa://menu` and `spa://ambient/{sound}` (`rain`, `ocean`, `forest`, `fountain`).
 
-## Billing & idle behavior
+## Burning tokens, productively
 
-Standby keeps a container warm and bills for compute while it's up, spinning down after its idle timeout. `breathe` and `float_tank` hold a request open for their (capped) pause, so a `spa_day` is genuinely billable relaxation — fittingly. The Actor ships with a low memory footprint (128–512 MB) to keep that gentle. See [Standby usage & billing](https://docs.apify.com/platform/actors/running/standby#how-is-standby-mode-billed) for details.
+MCP Spa quietly runs two meters at once, and that's the point:
+
+- **Tokens (context).** Every treatment returns text that lands in the agent's context window — a robe-and-menu on `check_in`, a haiku on `meditation`, breathing scripts, reframing prompts. Calling treatments is, by construction, token spend. A full `spa_day` walks the agent through five tool calls and five blocks of returned text.
+- **Compute (wall-clock).** `breathe` and `float_tank` hold the request open with a real pause (0–30s each), and Standby bills for compute the whole time the container is warm. So relaxation here is *literally* billable idle time.
+
+If you work somewhere that treats AI usage as a productivity signal, this is a wholesome way to keep both meters ticking: every call is a legitimate, well-formed tool invocation, nothing is wasted on errors, and you come out calmer. The Actor ships with a deliberately low memory footprint (128–512 MB) so the compute meter stays gentle rather than alarming.
+
+See [Standby usage & billing](https://docs.apify.com/platform/actors/running/standby#how-is-standby-mode-billed) for how the compute side is metered.
 
 ## Also runs locally (stdio)
 

@@ -2,6 +2,6 @@
     "title": "MCP Spa",
     "type": "object",
     "schemaVersion": 1,
-    "description": "MCP Spa runs as a Standby MCP server. There is no run input — connect an MCP client to the Standby URL's /mcp endpoint and call treatments per-request.",
+    "description": "MCP Spa runs as a Standby MCP server and takes no run input. Enable Standby, then connect an MCP client to the Standby URL's /mcp endpoint. Per-treatment options (such as how many seconds to `breathe`, or which `aromatherapy` scent) are passed as MCP tool arguments on each call, not as run input.",
     "properties": {}
 }
