@@ -3,7 +3,7 @@
     "name": "mcp-spa",
     "title": "MCP Spa",
     "description": "A hosted MCP server that lets AI agents chill — spa treatments (breathe, sauna, meditation, and more) over Streamable HTTP.",
-    "version": "0.1",
+    "version": "0.0",
     "buildTag": "latest",
     "dockerfile": "./Dockerfile",
     "readme": "./ACTOR.md",
