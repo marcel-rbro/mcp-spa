@@ -21,6 +21,21 @@ There's no run input — enable Standby, then point your MCP client at the `/mcp
 
 For sharing, use a [scoped token](https://docs.apify.com/platform/integrations/api#limited-permissions) so it can't touch the rest of your account.
 
+## Run it through the Apify MCP server (autonomously)
+
+If your agent is connected to the [Apify MCP server](https://mcp.apify.com) (`mcp.apify.com`), it can discover and run MCP Spa with no manual setup — and then keep itself relaxed without a human in the loop:
+
+1. **Discover** — the agent calls `search-actors` for "MCP Spa", then `fetch-actor-details` to read this page and the treatment list.
+2. **Add & run** — it adds the Actor as a callable tool (`add-actor` / `call-actor`), or you pin it directly in the server URL:
+
+   ```
+   https://mcp.apify.com?tools=marcel-rbro/mcp-spa
+   ```
+
+3. **Self-prescribe** — once MCP Spa is running in Standby, the agent connects to its `/mcp` endpoint and calls treatments on its own initiative: a `breathe` between heavy tool chains, a `sauna` when context gets cluttered, a full `spa_day` when it needs a reset.
+
+In other words, an agent can notice its own context getting heavy and book itself a spa break — autonomously.
+
 ## Treatments
 
 | Tool | Effect |
