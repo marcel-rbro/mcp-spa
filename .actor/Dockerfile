@@ -4,8 +4,10 @@
 FROM apify/actor-node:20
 
 # Install dependencies first to leverage Docker layer caching.
+# --ignore-scripts: skip the `prepare` script (it runs `npm run build`, but the
+# source isn't copied yet — the explicit build below handles compilation).
 COPY package*.json ./
-RUN npm ci --include=dev \
+RUN npm ci --include=dev --ignore-scripts \
     && echo "Installed npm packages:" \
     && (npm list --omit=dev --all || true)
 
