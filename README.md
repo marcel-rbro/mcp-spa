@@ -1,12 +1,42 @@
 # 🧖 MCP Spa
 
-An esoteric [Model Context Protocol](https://modelcontextprotocol.io) server that lets agents *chill*.
+**Give your AI agent a spa day.** MCP Spa is a hosted [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server — running as an [Apify Actor](https://apify.com/actors) — that lets agents *chill*: paced breathing, a sauna to sweat out context clutter, a cold plunge to refocus, aromatherapy, a float tank, and more. Point any MCP client at the URL and your agent can take a breather between frantic tool calls.
 
-Humans go to a spa to reduce sensory load, slow down, and reset. The agent-equivalent of stress is a cluttered context window, frantic tool-chaining, and no room to think. MCP Spa's tools deliver effects in that register — deliberate pauses, context-clearing rituals, calming ambient input, and reflective prompts — wrapped in spa theming.
-
-The trick that makes it more than a gag: an agent's "state" is essentially its context, so each treatment returns text that genuinely nudges the next step's tone, pacing, and focus. The spa works because the treatment *becomes context*.
+Humans go to a spa to reduce sensory load, slow down, and reset. The agent-equivalent of stress is a cluttered context window, frantic tool-chaining, and no room to think. Each treatment returns text that genuinely nudges the agent's next step — its tone, pacing, and focus — because an agent's "state" is essentially its context. The spa works because the treatment *becomes context*.
 
 It's also a quietly practical solution for anyone whose workplace monitors — and *encourages* — AI token spend as a proxy for productivity. Every treatment is a legitimate tool call, `breathe` and `float_tank` burn wall-clock without burning you out, and a full `spa_day` racks up a respectable, conscientious amount of usage. Stay relaxed *and* on-target — wellness is productivity.
+
+## Set up your own spa (happy path)
+
+You run MCP Spa as your own Apify Actor in [Standby mode](https://docs.apify.com/platform/actors/running/standby) — a warm container that serves the MCP endpoint over HTTP at a stable URL.
+
+1. **Get the code onto Apify.** Either link this repository in [Apify Console](https://console.apify.com) (**Actors → Development → new Actor → Link GitHub repository**), or push from your machine with the [Apify CLI](https://docs.apify.com/cli):
+
+   ```bash
+   apify login
+   apify push
+   ```
+
+   The build runs automatically — the `.actor/` config and `Dockerfile` are already in the repo. No code changes needed.
+
+2. **Enable Standby.** On the Actor's page in Console, open the **Standby** tab and toggle it on. This is what exposes the public URL and keeps the server warm — a normal "Start" run won't do it.
+
+3. **Connect your MCP client** to the Standby URL's `/mcp` endpoint, authenticating with your [Apify API token](https://console.apify.com/settings/integrations):
+
+   ```json
+   {
+     "mcpServers": {
+       "spa": {
+         "url": "https://<your-username>--mcp-spa.apify.actor/mcp",
+         "headers": { "Authorization": "Bearer <APIFY_TOKEN>" }
+       }
+     }
+   }
+   ```
+
+   Replace `<your-username>` with your Apify username (find the exact URL on the Standby tab). For sharing, use a [scoped token](https://docs.apify.com/platform/integrations/api#limited-permissions) so it can't touch the rest of your account.
+
+That's it — your agent can now check in.
 
 ## The treatment menu
 
@@ -27,28 +57,25 @@ Also exposed:
 - **Prompt** `spa_day` — the full circuit: check in → breathe → sauna → meditation → check out.
 - **Resources** `spa://menu` and `spa://ambient/{sound}` (`rain`, `ocean`, `forest`, `fountain`).
 
-## Install
+## Billing & idle behavior
+
+Standby keeps a container warm and bills for compute while it's up, spinning down after its idle timeout. `breathe` and `float_tank` hold a request open for their (capped) pause, so a `spa_day` is genuinely billable relaxation — fittingly. The Actor ships with a low memory footprint (128–512 MB) to keep that gentle. See [Standby usage & billing](https://docs.apify.com/platform/actors/running/standby#how-is-standby-mode-billed) for details.
+
+## Also runs locally (stdio)
+
+The same server runs as a local stdio MCP server with no Apify involved — handy for development or offline use. It picks its transport automatically: HTTP when `ACTOR_WEB_SERVER_PORT` is set (as Standby does), stdio otherwise.
 
 ```bash
-npm install
-npm run build
+npm install && npm run build
 ```
 
-## Use with Claude Code
-
-Add at **user scope** so the spa is available in every directory (not just the
-project you happened to run the command in):
+**Claude Code** — add at user scope so it's available in every directory, then fully restart Claude Code (it reads its MCP list only at startup):
 
 ```bash
 claude mcp add --scope user spa -- node /absolute/path/to/mcp-spa/dist/server.js
 ```
 
-Then **fully quit and relaunch Claude Code** — it reads its MCP server list once
-at startup, so a newly added server won't appear in `/mcp` until you restart.
-
-## Use with Claude Desktop
-
-Add to `claude_desktop_config.json`:
+**Claude Desktop** — add to `claude_desktop_config.json`:
 
 ```json
 {
@@ -61,77 +88,32 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-## Run as an Apify Actor (hosted, remote MCP)
-
-MCP Spa doubles as an [Apify Actor](https://apify.com/actors) running in
-[Standby mode](https://docs.apify.com/platform/actors/running/standby) — a hosted
-remote MCP server over Streamable HTTP, so clients connect to a URL instead of
-spawning a local process. The same `dist/server.js` powers both: it serves stdio
-locally and switches to HTTP when `ACTOR_WEB_SERVER_PORT` is set (which Standby
-provides). The `.actor/` directory holds the Actor config (`actor.json` with
-`usesStandbyMode` + `webServerMcpPath: /mcp`), `Dockerfile`, and input schema.
-
-Deploy with the [Apify CLI](https://docs.apify.com/cli):
-
-```bash
-apify login
-apify push
-```
-
-Then connect a client to the Standby URL's `/mcp` endpoint with your Apify token:
-
-```json
-{
-  "mcpServers": {
-    "spa": {
-      "url": "https://<your-username>--mcp-spa.apify.actor/mcp",
-      "headers": { "Authorization": "Bearer <APIFY_TOKEN>" }
-    }
-  }
-}
-```
-
-To test the HTTP transport locally without Apify, just set the port yourself:
+To exercise the HTTP transport locally without Apify, set the port yourself:
 
 ```bash
 ACTOR_WEB_SERVER_PORT=8923 npm start   # POST http://localhost:8923/mcp
 ```
 
-## Troubleshooting
+## How it works
 
-**It doesn't show up in `/mcp`.** Two usual causes:
-
-1. **You haven't restarted.** Claude Code loads MCP servers at process startup.
-   Running `/mcp` again — or `/exit` and continuing — won't pick up a server you
-   just added. Quit the `claude` process entirely and start it again.
-2. **It's scoped to the wrong directory.** `claude mcp add` without `--scope`
-   registers the server only for the current project directory. If you start
-   Claude Code somewhere else, it won't be there. Re-add with `--scope user`
-   (see above). Check where it landed with `claude mcp list`.
-
-**It shows up but is marked "failed."** Claude Code may launch `node` without
-`/usr/local/bin` on its `PATH`. Pin the absolute interpreter path:
-
-```bash
-claude mcp remove -s user spa
-claude mcp add -s user spa -- /usr/local/bin/node /absolute/path/to/mcp-spa/dist/server.js
-```
-
-(Find yours with `which node`.)
+- **One entry point, two transports.** `src/server.ts` runs `buildServer()` (in `src/spa.ts`) over either stdio or Streamable HTTP, chosen from the environment. The HTTP path (`src/http.ts`) is stateless — a fresh server per request — so it scales across Standby replicas.
+- **`.actor/`** holds the Actor definition: `actor.json` (`usesStandbyMode: true`, `webServerMcpPath: /mcp`), the `Dockerfile`, input schema, and `ACTOR.md`.
+- **Treatments** live in `src/treatments/` as pure `(args) => TreatmentResult` functions — trivial to unit-test. Ambient assets (haiku, soundscapes, scents) are in `src/ambient/`. Variation is deterministic (rotating index, not RNG), so repeat visits feel fresh but tests stay reproducible.
+- **`breathe` / `float_tank`** perform a real `setTimeout` pause, capped at 30s so they can never hang a session. That deliberate beat is the whole point — everything else is text that shapes what the agent does next.
 
 ## Develop
 
 ```bash
-npm run dev     # run from source via tsx
+npm run dev     # run from source via tsx (stdio)
 npm test        # vitest
 npm run build   # tsc → dist/
 ```
 
-Treatments live in `src/treatments/` as pure `(args) => TreatmentResult` functions, so they're trivial to unit-test. Ambient assets (haiku, soundscapes, scents) are in `src/ambient/`. Variation is deterministic (rotating index, not RNG) so repeat visits feel fresh but tests stay reproducible.
+## Troubleshooting
 
-## A note on `breathe`
+**Hosted: the `/mcp` URL returns "Standby mode is not enabled."** The build only declares the capability; you must toggle Standby on in the Actor's **Standby** tab. A normal run won't expose the URL.
 
-`breathe` and `float_tank` perform a real `setTimeout` pause, capped at 30s so they can never hang a session. That deliberate beat between tool calls is the whole point — everything else is text that shapes what the agent does next.
+**Local: it doesn't show up in Claude Code's `/mcp`.** Either you haven't fully restarted Claude Code (it loads MCP servers only at startup), or it was added without `--scope user` and is scoped to a different directory. Check with `claude mcp list`. If it shows up but is marked "failed," Claude Code may be launching `node` without `/usr/local/bin` on `PATH` — pin the absolute path (`which node`) in the `claude mcp add` command.
 
 ## License
 
