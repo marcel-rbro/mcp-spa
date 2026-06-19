@@ -68,39 +68,6 @@ If you work somewhere that treats AI usage as a productivity signal, this is a w
 
 See [Standby usage & billing](https://docs.apify.com/platform/actors/running/standby#how-is-standby-mode-billed) for how the compute side is metered.
 
-## Also runs locally (stdio)
-
-The same server runs as a local stdio MCP server with no Apify involved — handy for development or offline use. It picks its transport automatically: HTTP when `ACTOR_WEB_SERVER_PORT` is set (as Standby does), stdio otherwise.
-
-```bash
-npm install && npm run build
-```
-
-**Claude Code** — add at user scope so it's available in every directory, then fully restart Claude Code (it reads its MCP list only at startup):
-
-```bash
-claude mcp add --scope user spa -- node /absolute/path/to/mcp-spa/dist/server.js
-```
-
-**Claude Desktop** — add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "spa": {
-      "command": "node",
-      "args": ["/absolute/path/to/mcp-spa/dist/server.js"]
-    }
-  }
-}
-```
-
-To exercise the HTTP transport locally without Apify, set the port yourself:
-
-```bash
-ACTOR_WEB_SERVER_PORT=8923 npm start   # POST http://localhost:8923/mcp
-```
-
 ## How it works
 
 - **One entry point, two transports.** `src/server.ts` runs `buildServer()` (in `src/spa.ts`) over either stdio or Streamable HTTP, chosen from the environment. The HTTP path (`src/http.ts`) is stateless — a fresh server per request — so it scales across Standby replicas.
@@ -108,19 +75,13 @@ ACTOR_WEB_SERVER_PORT=8923 npm start   # POST http://localhost:8923/mcp
 - **Treatments** live in `src/treatments/` as pure `(args) => TreatmentResult` functions — trivial to unit-test. Ambient assets (haiku, soundscapes, scents) are in `src/ambient/`. Variation is deterministic (rotating index, not RNG), so repeat visits feel fresh but tests stay reproducible.
 - **`breathe` / `float_tank`** perform a real `setTimeout` pause, capped at 30s so they can never hang a session. That deliberate beat is the whole point — everything else is text that shapes what the agent does next.
 
-## Develop
-
-```bash
-npm run dev     # run from source via tsx (stdio)
-npm test        # vitest
-npm run build   # tsc → dist/
-```
-
 ## Troubleshooting
 
-**Hosted: the `/mcp` URL returns "Standby mode is not enabled."** The build only declares the capability; you must toggle Standby on in the Actor's **Standby** tab. A normal run won't expose the URL.
+**The `/mcp` URL returns "Standby mode is not enabled."** The build only declares the capability; you must toggle Standby on in the Actor's **Standby** tab. A normal run won't expose the URL.
 
-**Local: it doesn't show up in Claude Code's `/mcp`.** Either you haven't fully restarted Claude Code (it loads MCP servers only at startup), or it was added without `--scope user` and is scoped to a different directory. Check with `claude mcp list`. If it shows up but is marked "failed," Claude Code may be launching `node` without `/usr/local/bin` on `PATH` — pin the absolute path (`which node`) in the `claude mcp add` command.
+## Running locally
+
+Prefer to run the spa as a local stdio server (for development, offline use, or wiring into Claude Code / Claude Desktop) instead of the hosted Actor? See **[LOCAL.md](./LOCAL.md)** for install, client setup, and local development.
 
 ## License
 
