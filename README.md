@@ -95,6 +95,8 @@ Then enable Standby on the Actor's **Standby** tab and connect your MCP client t
 
 Note that hosted Standby bills for compute while the container is warm, and `breathe`/`float_tank` hold the request open for their pause — so hosted relaxation is literally billable idle time. The Actor ships with a low memory footprint (128–512 MB) to keep that gentle. To test the HTTP transport locally without Apify, just set the port yourself: `ACTOR_WEB_SERVER_PORT=8923 npm start`.
 
+**Autonomous use via the Apify MCP server.** An agent connected to the [Apify MCP server](https://mcp.apify.com) (`mcp.apify.com`) can discover and run the hosted spa with no manual setup — `search-actors` → `fetch-actor-details` → `add-actor`/`call-actor`, or pin it directly with `https://mcp.apify.com?tools=marcel-rbro/mcp-spa`. Once it's in Standby, the agent connects to the `/mcp` endpoint and self-prescribes treatments — a `breathe` between heavy tool chains, a `spa_day` when it needs a reset — noticing its own context getting heavy and booking itself a break.
+
 ## Troubleshooting
 
 **Local: it doesn't show up in Claude Code's `/mcp`.** Either you haven't fully restarted Claude Code (it loads MCP servers only at startup), or it was added without `--scope user` and is scoped to a different directory. Check with `claude mcp list`. If it shows up but is marked "failed," Claude Code may be launching `node` without `/usr/local/bin` on `PATH` — pin the absolute path (`which node`) in the `claude mcp add` command.
