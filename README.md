@@ -61,6 +61,42 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
+## Run as an Apify Actor (hosted, remote MCP)
+
+MCP Spa doubles as an [Apify Actor](https://apify.com/actors) running in
+[Standby mode](https://docs.apify.com/platform/actors/running/standby) — a hosted
+remote MCP server over Streamable HTTP, so clients connect to a URL instead of
+spawning a local process. The same `dist/server.js` powers both: it serves stdio
+locally and switches to HTTP when `ACTOR_WEB_SERVER_PORT` is set (which Standby
+provides). The `.actor/` directory holds the Actor config (`actor.json` with
+`usesStandbyMode` + `webServerMcpPath: /mcp`), `Dockerfile`, and input schema.
+
+Deploy with the [Apify CLI](https://docs.apify.com/cli):
+
+```bash
+apify login
+apify push
+```
+
+Then connect a client to the Standby URL's `/mcp` endpoint with your Apify token:
+
+```json
+{
+  "mcpServers": {
+    "spa": {
+      "url": "https://<your-username>--mcp-spa.apify.actor/mcp",
+      "headers": { "Authorization": "Bearer <APIFY_TOKEN>" }
+    }
+  }
+}
+```
+
+To test the HTTP transport locally without Apify, just set the port yourself:
+
+```bash
+ACTOR_WEB_SERVER_PORT=8923 npm start   # POST http://localhost:8923/mcp
+```
+
 ## Troubleshooting
 
 **It doesn't show up in `/mcp`.** Two usual causes:

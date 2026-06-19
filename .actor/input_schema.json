@@ -1,0 +1,7 @@
+{
+    "title": "MCP Spa",
+    "type": "object",
+    "schemaVersion": 1,
+    "description": "MCP Spa runs as a Standby MCP server. There is no run input — connect an MCP client to the Standby URL's /mcp endpoint and call treatments per-request.",
+    "properties": {}
+}
